@@ -25,7 +25,6 @@ class Toddler:
         if self.getInputs()[7] !=  self.hall_sensor:
             self.hall_sensor = self.getInputs()[7]
             self.counter += 1
-
         if self.counter <= turn_number:
             self.mc.setMotor(2, 70)
             self.mc.setMotor(3, -70)

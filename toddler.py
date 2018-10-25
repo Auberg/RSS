@@ -30,9 +30,10 @@ class Toddler:
         self.left_ir = 2
         self.left_ir = 3
         # Speed setting
-        self.base_speed = 85
-        self.current_speed = self.base_speed
+        self.left_ratio = 0.7
+        self.base_speed = 110
         self.min_speed = 70
+        self.current_speed = self.min_speed
         self.direction = -1 #-1 forward, 1 backward
         # Sensor setting
         self.threshold_sonar = 20
@@ -44,8 +45,6 @@ class Toddler:
         self.final_angle = 90
         # Start required
 
-        self.light_on()
-
         self.hall_sensor = -1
         self.counter = 0
 
@@ -55,17 +54,46 @@ class Toddler:
         # self.mc.setMotor(4, 100)
         #self.mc.setMotor(0,100)
         #self.mc.setMotor(1,100)
-        self.mc.setMotor(2,100)
+        self.light_on()
+        self.mc.setMotor(self.left_motor,-100)
         #self.mc.setMotor(3,100)
-        self.mc.setMotor(4,100)
+        self.mc.setMotor(self.right_motor,-100)
         #self.mc.setMotor(5,100)
         # self.turn_test(90)
     	# self.mc.stopMotors()
     	# time.sleep(2)
 
-    def turn_test(self, radius):
+    def control(self):
+        print('{}\t{}'.format(self.getSensors(), self.getInputs()))
+        if self.TEST_MODE:
+            self._test()
+        else:
+            self.light_on()
+            if self.getInputs()[self.bumper_left] == 1 or self.getInputs()[self.bumper_right] == 1:
+                print('bumper detected')
+                self.mc.stopMotors()
+                time.sleep(0.8)
+                #self.turn_radius(90)
+            #self.mc.setMotor(1, -50 if self.getSensors()[0] >= 30 else 50)
+            elif self.getSensors()[self.sonar_sensor] <= self.threshold_sonar:
+                # self.turn_number(3)
+                print('sonar detected')
+                self.stop_motion()
+                self.backward( )
+                self.mc.stopMotors()
+            elif self.getSensors()[self.light_sensor] >= self.threshold_light:
+                print('light detected')
+                self.mc.stopMotors()
+                self.servo_move(self.final_angle)
+            else:                self.backward( )
+
+                print('run')
+                self.run()
+
+    def turn_radius(self, radius):
         counter = 0
-        turn_count = utils.calc_hall_sensor_count_for_turn(radius)
+        turn_count = utils.calc_hall_                self.backward( )
+sensor_count_for_turn(radius)
         print(turn_count)
         self.turn_number(turn_count)
 
@@ -75,75 +103,52 @@ class Toddler:
             if self.getInputs()[self.odomoter] !=  self.hall_sensor:
                 self.hall_sensor = self.getInputs()[self.odomoter]
                 counter += 1
-            self.mc.setMotor(self.left_motor, self.current_speed)
+            self.mc.setMotor(self.left_motor, self.left_ratio * self.current_speed)
             self.mc.setMotor(self.right_motor, -1 * self.current_speed)
-
-    def control(self):
-        print('{}\t{}'.format(self.getSensors(), self.getInputs()))
-        if self.TEST_MODE:
-            self._test()
-        else:
-            if self.getInputs()[self.bumper_left] == 1 or self.getInputs()[self.bumper_right] == 1:
-                print('bumper detected')
-                self.stop_motion()
-                self.backward()
-                self.turn_test(90)
-            #self.mc.setMotor(1, -50 if self.getSensors()[0] >= 30 else 50)
-        elif self.getSensors()[self.sonar_sensor] <= self.threshold_sonar:
-                # self.turn_number(3)
-                print('sonar detected')
-                pass
-            elif self.getSensors()[self.light_sensor] >= self.threshold_light:
-                print('light detected')
-                self.stop()
-                self.servo_move(self.final_angle)
-            else:
-                print('run')
-                self.run()
+        if self.counter
 
     def turn(self):
         self.current_sbackwardpeed = self.min_speed
-        if self.getSensors()[self.left_ir] >= 30: # turn right
-            self.mc.setMotor(self.left_motor, -1 * self.current_speed * self.direction) # left backward
+        if self.getSensors()[self.right_ir] <= self.threshold_ir: # turn right
+            self.mc.setMotor(self.left_motor, -1 * self.left_ratio * self.current_speed * self.direction) # left backward
             self.mc.setMotor(self.right_motor, self.current_speed * self.direction) # right forward
             time.sleep(self.threshold_turn)
-        elif self.getSensors()[self.right_ir] >= 30: # turn left
-            self.mc.setMotor(self.left_motor, self.current_speed * self.direction) # left forward
+        elif self.getSensors()[self.left_ir] <= self.threshold_ir: # turn left
+            self.mc.setMotor(self.left_motor, self.left_ratio * self.current_speed * self.direction) # left forward
             self.mc.setMotor(self.right_motor, -1 * self.current_speed * self.direction) # right backward
             time.sleep(self.threshold_turn)
         else: # turn 180
-            self.mc.setMotor(self.left_motor, -1 * self.current_speed * self.direction) # left backward
+            self.mc.setMotor(self.left_motor, -1 * self.left_ratio * self.current_speed * self.direction) # left backward
             self.mc.setMotor(self.right_motor, self.current_speed * self.direction) # right forward
-            time.sleep(2 * self.threshold_turn)
-        self.current_speed = self.base_speed
+            time.sleep(2*self.threshold_turn)
+        self.current_speed = self.min_speed
 
-    def backward(self, turn_number=3):
+    def backward(self, turn_limit=3):
         counter = 0
-        while counter <= turn_number:
+        while counter <= turn_limit:
             if self.getInputs()[self.odomoter] !=  self.hall_sensor:
                 self.hall_sensor = self.getInputs()[self.odomoter]
                 counter += 1
-            self.mc.setMotor(self.left_motor, -1*self.direction* self.current_speed)
-            self.mc.setMotor(self.right_motor, -1*self.direction* self.current_speed)
-
-    def stop(self):
-        self.mc.stopMotors()
-        print('STOPING THE MOTORS.')
+            self.mc.setMotor(self.left_motor, -1 * self.left_ratio * self.direction* self.current_speed)
+            self.mc.setMotor(self.right_motor, -1 * self.direction* self.current_speed)
+        time.sleep(0.3*turn_limit)
 
     def stop_motion(self):
-        self._slow_motion()
-        time.sleep(0.5)
-        self.mc.stopMotors()
-        time.sleep(0.5)
         print('STOPING THE MOTORS USING MOTION.')
-
-    def _slow_motion(self):
+        #slowing down
         self.current_speed =self.min_speed
         self.run()
+        time.sleep(0.15)
+        print('STOPING THE MOTORS.')
+        self.mc.stopMotors()
+        time.sleep(1)
 
     def run(self):
-        self.mc.setMotor(self.left_motor, self.current_speed * self.direction)
+        self.mc.setMotor(self.left_motor, self.left_ratio * self.current_speed * self.direction)
         self.mc.setMotor(self.right_motor, self.current_speed * self.direction)
+        time.sleep(0.85)
+        self.mc.stopMotors()
+        time.sleep(0.15)
 
     def light_on(self):
     	self.mc.setMotor(self.lightbulb, 100)

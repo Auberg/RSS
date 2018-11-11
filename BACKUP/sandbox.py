@@ -82,12 +82,12 @@ class Sandbox:
                 while not self.__done:
                     self.__toddler.control()
 
-            # def toddler_vision():
-            #     """
-            #     This is the toddler *vision* thread target.
-            #     """
-            #     while not self.__done:
-            #         self.__toddler.vision()
+            def toddler_vision():
+                """
+                This is the toddler *vision* thread target.
+                """
+                while not self.__done:
+                    self.__toddler.vision()
 
             sys.path.insert(0, '/home/student/')
             sys.path.insert(1, '/home/pi/')
@@ -119,7 +119,7 @@ class Sandbox:
     def destroy(self):
         self.__done = True
         self.__toddler_control.join()
-        # self.__toddler_vision.join()
+#        self.__toddler_vision.join()
         self.__IO.destroy()
 
 
